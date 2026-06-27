@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Ticket · Ticket Sasa</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+<div id="ts-shell-root"></div>
+<script src="js/config.js"></script>
+
+<script src="js/api.js"></script><script src="js/auth.js"></script><script src="js/shell.js"></script>
+<script>
+const ticketId = new URLSearchParams(location.search).get('id');
+
+// Model display maps
+const STATUS_MAP   = { P:'pending', A:'assigned', I:'progress', C:'completed' };
+const STATUS_LABEL = { P:'Pending', A:'Assigned', I:'In Progress', C:'Completed' };
+const CAT_LABEL    = { B:'Billing', C:'Complaint', T:'Technical', N:'Connectivity' };
+const PRI_MAP      = { H:'high', L:'low' };
+const PRI_LABEL    = { H:'High', L:'Low' };
+
+(async () => {
+  const user = await TicketSasaAuth.requireAuth();
+  if (!user || !ticketId) { location.href = 'tickets.html'; return; }
+
+  const role    = TicketSasaAuth.getEffectiveRole(user);
+  const isAdmin = role === 'A';
+  const isTech  = role === 'T';
+  const esc     = TicketSasaShell.escapeHtml;
+  const content = TicketSasaShell.render(user, { activeHref: 'tickets.html' });
+
+  content.innerHTML = `
+    <div class="ts-topbar">
+      <div>
+        <div class="ts-eyebrow"><a href="tickets.html" class="text-decoration-none" style="color:var(--ts-muted)">← Tickets</a></div>
+        <h1 class="ts-page-title" id="pg-title">Loading…</h1>
+      </div>
+      <div id="pg-actions" class="d-flex gap-2"></div>
+    </div>
+    <div id="region"><div class="ts-skeleton" style="height:320px;border-radius:14px"></div></div>`;
+
+  let ticket;
+  try { ticket = await TicketSasaAPI.getTicket(ticketId); }
+  catch(err) {
+    document.getElementById('pg-title').textContent = 'Error';
+    document.getElementById('region').innerHTML = `<div class="alert alert-danger">${esc(err.message)}</div>`;
+    return;
+  }
+
+  document.getElementById('pg-title').textContent = ticket.title;
+
+  // Admin actions
+  if (isAdmin) {
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-outline-danger btn-sm';
+    btn.textContent = 'Delete ticket';
+    btn.onclick = async () => {
+      if (!confirm('Delete this ticket permanently?')) return;
+      await TicketSasaAPI.deleteTicket(ticketId);
+      location.href = 'tickets.html';
+    };
+    document.getElementById('pg-actions').appendChild(btn);
+  }
+
+  const stub = ticket.status
+    ? `<span class="ts-stub ts-stub--${STATUS_MAP[ticket.status] || 'unknown'}">${STATUS_LABEL[ticket.status] || ticket.status}</span>`
+    : `<span class="ts-stub ts-stub--unknown">Pending</span>`;
+
+  // ── layout differs by role ────────────────────────────────────────────
+  // Admin + Technician: full two-column layout with worklogs + AI summary
+  // Client (U): clean single-column, no worklogs, no AI summary
+  const isPrivileged = isAdmin || isTech;
+
+  document.getElementById('region').innerHTML = isPrivileged ? `
+    <div class="row g-3">
+      <div class="col-lg-7">
+        <!-- Ticket info -->
+        <div class="ts-panel p-4 mb-3">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            ${stub}
+            <span style="font-family:var(--ts-mono);font-size:.7rem;color:var(--ts-muted)">#${ticket.id}</span>
+          </div>
+          <dl class="row g-0 mb-0" style="font-size:.9rem;row-gap:.65rem">
+            ${row('Submitted by', esc(ticket.user || '—'))}
+            ${row('Location', esc(ticket.location || '—'))}
+            ${ticket.description ? row('Description', `<span style="line-height:1.7">${esc(ticket.description)}</span>`) : ''}
+          </dl>
+        </div>
+
+        <!-- Worklogs -->
+        <div class="ts-panel p-4">
+          <h2 class="h6 mb-3" style="font-weight:700">Worklogs</h2>
+          <div id="wl-region"><div class="ts-skeleton" style="height:60px"></div></div>
+          ${isTech ? `
+          <hr class="my-3" style="border-color:var(--ts-border)">
+          <form id="wl-form">
+            <div class="mb-2">
+              <label class="form-label" for="wl-notes">Add entry</label>
+              <textarea class="form-control" id="wl-notes" rows="2" required placeholder="What was done on this ticket?"></textarea>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="wl-done" style="accent-color:var(--ts-purple)">
+                <label class="form-check-label small text-muted" for="wl-done">Mark as resolved</label>
+              </div>
+              <button class="btn btn-primary btn-sm" type="submit" id="wl-btn">Add entry</button>
+            </div>
+            <div id="wl-alert" class="alert alert-danger d-none small py-2 mt-2"></div>
+          </form>` : ''}
+        </div>
+      </div>
+
+      <!-- AI Summary -->
+      <div class="col-lg-5">
+        <div class="ts-panel p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h6 mb-0" style="font-weight:700">AI Summary</h2>
+            ${isAdmin ? `<button class="btn btn-primary btn-sm" id="ai-btn">Generate</button>` : ''}
+          </div>
+          <div id="ai-region"><div class="ts-skeleton" style="height:100px"></div></div>
+        </div>
+      </div>
+    </div>` : `
+    <!-- Client view: simple, clean, no internal details -->
+    <div class="row justify-content-center">
+      <div class="col-lg-7">
+        <div class="ts-panel p-4">
+          <div class="d-flex justify-content-between align-items-start mb-4">
+            ${stub}
+            <span style="font-family:var(--ts-mono);font-size:.7rem;color:var(--ts-muted)">#${ticket.id}</span>
+          </div>
+          <dl class="row g-0 mb-0" style="font-size:.9rem;row-gap:.65rem">
+            ${row('Location', esc(ticket.location || '—'))}
+            ${ticket.description ? row('Description', `<span style="line-height:1.7">${esc(ticket.description)}</span>`) : ''}
+          </dl>
+          ${ticket.status === 'C' ? `
+          <div class="mt-4 p-3 rounded" style="background:var(--ts-green-soft);border:1px solid rgba(0,184,148,.2)">
+            <div style="color:var(--ts-green);font-size:.9rem;font-weight:600">✓ This ticket has been resolved</div>
+          </div>` : ''}
+        </div>
+      </div>
+    </div>`;
+
+  // ── helpers ───────────────────────────────────────────────────────────
+  function row(label, value) {
+    return `<dt class="col-4" style="color:var(--ts-muted);font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding-top:.1rem">${label}</dt>
+            <dd class="col-8 mb-0">${value}</dd>`;
+  }
+
+  if (!isPrivileged) return;
+
+  // ── worklogs ─────────────────────────────────────────────────────────
+  async function loadWorklogs() {
+    const el = document.getElementById('wl-region');
+    try {
+      const data = await TicketSasaAPI.listWorklogs(ticketId);
+      const logs = Array.isArray(data) ? data : (data.results || []);
+      if (!logs.length) { el.innerHTML = `<p class="small text-muted mb-0">No entries yet.</p>`; return; }
+      el.innerHTML = logs.map(l => `
+        <div class="ts-worklog-entry ${l.is_completed_worklog ? 'is-complete' : ''}">
+          <div class="ts-worklog-meta">${esc(l.user || '—')}${l.is_completed_worklog ? ' · resolved' : ''}</div>
+          <div style="font-size:.88rem;line-height:1.65">${esc(l.notes)}</div>
+        </div>`).join('');
+    } catch(err) {
+      el.innerHTML = `<p class="small text-muted mb-0">Could not load worklogs: ${esc(err.message)}</p>`;
+    }
+  }
+
+  document.getElementById('wl-form')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('wl-btn');
+    const al  = document.getElementById('wl-alert');
+    al.classList.add('d-none'); btn.disabled = true; btn.textContent = 'Adding…';
+    try {
+      await TicketSasaAPI.addWorklog(ticketId, {
+        notes: document.getElementById('wl-notes').value.trim(),
+        is_completed_worklog: document.getElementById('wl-done').checked,
+      });
+      document.getElementById('wl-notes').value = '';
+      document.getElementById('wl-done').checked = false;
+      await loadWorklogs();
+    } catch(err) { al.textContent = err.message || 'Could not add entry.'; al.classList.remove('d-none'); }
+    finally { btn.disabled = false; btn.textContent = 'Add entry'; }
+  });
+
+  // ── AI summary ────────────────────────────────────────────────────────
+  async function loadAI() {
+    const el = document.getElementById('ai-region');
+    try {
+      const s = await TicketSasaAPI.getAiSummary(ticketId);
+      if (!s) { el.innerHTML = `<p class="small text-muted mb-0">${isAdmin ? 'No summary yet — click Generate.' : 'No AI summary generated yet.'}</p>`; return; }
+
+      // Decode single-char codes from the model
+      const priLabel = PRI_LABEL[s.priority]  || s.priority  || '—';
+      const catLabel = CAT_LABEL[s.category]  || s.category  || '—';
+      const priCls   = PRI_MAP[s.priority]    || 'unknown';
+
+      el.innerHTML = `
+        <div class="d-flex gap-2 flex-wrap mb-3">
+          <span class="ts-stub ts-stub--${priCls}">${esc(priLabel)} priority</span>
+          <span class="ts-stub ts-stub--assigned">${esc(catLabel)}</span>
+        </div>
+        <p class="small mb-2" style="line-height:1.7">${esc(s.summarry || '')}</p>
+        <hr style="border-color:var(--ts-border)">
+        <p class="small mb-0"><strong>Suggestion:</strong> <span class="text-muted">${esc(s.suggestion || '')}</span></p>`;
+    } catch(err) {
+      el.innerHTML = `<div class="ts-banner ts-banner-warn mb-0 small">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        AI summary unavailable (${err.status || 'error'}): ${esc(err.message)}
+      </div>`;
+    }
+  }
+
+  loadWorklogs(); loadAI();
+
+  const aiBtn = document.getElementById('ai-btn');
+  if (aiBtn) aiBtn.addEventListener('click', async () => {
+    aiBtn.disabled = true; aiBtn.textContent = 'Generating…';
+    try { await TicketSasaAPI.generateAiSummary(ticketId); }
+    catch {} // error shown by loadAI
+    await loadAI(); aiBtn.disabled = false; aiBtn.textContent = 'Regenerate';
+  });
+})();
+</script>
+</body></html>

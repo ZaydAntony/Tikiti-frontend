@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>New Ticket · Ticket Sasa</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+<div id="ts-shell-root"></div>
+<script src="js/config.js"></script>
+
+<script src="js/api.js"></script><script src="js/auth.js"></script><script src="js/shell.js"></script>
+<script>
+(async () => {
+  const user = await TicketSasaAuth.requireAuth(); if (!user) return;
+  const content = TicketSasaShell.render(user, { activeHref:'new-ticket.html' });
+
+  content.innerHTML = `
+    <div class="ts-topbar">
+      <div>
+        <div class="ts-eyebrow"><a href="tickets.html" class="text-decoration-none" style="color:var(--ts-muted)">← Back to Tickets</a></div>
+        <h1 class="ts-page-title">New Ticket</h1>
+      </div>
+    </div>
+    <div class="ts-panel p-4" style="max-width:580px">
+      <div id="alert" class="alert alert-danger d-none small py-2"></div>
+      <form id="form" novalidate>
+        <div class="mb-3">
+          <label class="form-label" for="title">Title <span class="text-danger">*</span></label>
+          <input class="form-control" id="title" type="text" maxlength="40" required placeholder="Brief summary of the issue">
+          <div class="form-text">Max 40 characters</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="loc">Location <span class="text-danger">*</span></label>
+          <input class="form-control" id="loc" type="text" required placeholder="e.g. Lab 3, Floor 2, Block B">
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="desc">Description <span class="text-danger">*</span></label>
+          <textarea class="form-control" id="desc" rows="5" required placeholder="Describe the issue in detail. The more context you provide, the faster it gets resolved."></textarea>
+        </div>
+        <div class="d-flex gap-2 mt-2">
+          <button class="btn btn-primary" type="submit" id="btn">Submit Ticket</button>
+          <a href="tickets.html" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>`;
+
+  document.getElementById('form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const alertEl = document.getElementById('alert');
+    const btn = document.getElementById('btn');
+    alertEl.classList.add('d-none');
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    try {
+      const t = await TicketSasaAPI.createTicket({
+        title:       document.getElementById('title').value.trim(),
+        location:    document.getElementById('loc').value.trim(),
+        description: document.getElementById('desc').value.trim(),
+      });
+      location.href = `ticket-detail.html?id=${t.id}`;
+    } catch(err) {
+      alertEl.textContent = err.message||'Could not submit ticket.';
+      alertEl.classList.remove('d-none');
+      btn.disabled = false; btn.textContent = 'Submit Ticket';
+    }
+  });
+})();
+</script>
+</body></html>

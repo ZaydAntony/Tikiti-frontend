@@ -1,0 +1,593 @@
+/* =========================================================================
+   Ticket Sasa — Light lavender theme inspired by EventLoop.co.ke
+   Bootstrap 5 is the base; these tokens + overrides give it personality.
+   ========================================================================= */
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap");
+
+:root {
+  /* Palette */
+  --ts-bg: #f4f3ff; /* lavender tint page background */
+  --ts-surface: #ffffff; /* cards, panels */
+  --ts-surface-2: #f0effe; /* subtle secondary surface */
+  --ts-border: #e4e2f8; /* hairline borders */
+  --ts-border-dark: #cbc8f0;
+
+  --ts-purple: #6c5ce7; /* primary brand */
+  --ts-purple-soft: rgba(108, 92, 231, 0.1);
+  --ts-purple-dark: #5648c8;
+  --ts-violet: #a29bfe; /* lighter accent */
+  --ts-violet-soft: rgba(162, 155, 254, 0.15);
+
+  --ts-ink: #1e1b3a; /* near-black text */
+  --ts-ink-2: #4a4568; /* secondary text */
+  --ts-muted: #9896b0; /* placeholder / dimmed */
+
+  --ts-green: #00b894;
+  --ts-green-soft: rgba(0, 184, 148, 0.12);
+  --ts-amber: #fdcb6e;
+  --ts-amber-soft: rgba(253, 203, 110, 0.18);
+  --ts-red: #e17055;
+  --ts-red-soft: rgba(225, 112, 85, 0.12);
+  --ts-blue: #74b9ff;
+  --ts-blue-soft: rgba(116, 185, 255, 0.15);
+
+  /* Type */
+  --ts-font: "Plus Jakarta Sans", system-ui, sans-serif;
+  --ts-mono: "DM Mono", monospace;
+
+  /* Shape */
+  --ts-radius: 8px;
+  --ts-radius-lg: 14px;
+  --ts-radius-xl: 20px;
+
+  /* Shadow */
+  --ts-shadow-sm: 0 1px 4px rgba(108, 92, 231, 0.08);
+  --ts-shadow: 0 4px 20px rgba(108, 92, 231, 0.12);
+  --ts-shadow-lg: 0 8px 40px rgba(108, 92, 231, 0.16);
+}
+
+html,
+body {
+  background: var(--ts-bg);
+  color: var(--ts-ink);
+  font-family: var(--ts-font);
+  font-size: 15px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--ts-font);
+  letter-spacing: -0.02em;
+  color: var(--ts-ink);
+}
+
+/* Bootstrap overrides */
+.btn-primary {
+  background: var(--ts-purple);
+  border-color: var(--ts-purple);
+  font-weight: 600;
+  border-radius: 50px;
+  padding: 0.5rem 1.4rem;
+}
+.btn-primary:hover {
+  background: var(--ts-purple-dark);
+  border-color: var(--ts-purple-dark);
+}
+.btn-outline-secondary {
+  border-color: var(--ts-border-dark);
+  color: var(--ts-ink-2);
+  border-radius: 50px;
+  font-weight: 500;
+}
+.btn-outline-secondary:hover {
+  background: var(--ts-surface-2);
+  color: var(--ts-purple);
+  border-color: var(--ts-purple);
+}
+.btn-outline-danger {
+  border-radius: 50px;
+  font-size: 0.82rem;
+}
+.form-control,
+.form-select {
+  background: var(--ts-surface);
+  border-color: var(--ts-border);
+  border-radius: var(--ts-radius);
+  color: var(--ts-ink);
+  font-family: var(--ts-font);
+}
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--ts-purple);
+  box-shadow: 0 0 0 3px var(--ts-purple-soft);
+}
+.form-control::placeholder {
+  color: var(--ts-muted);
+}
+.form-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ts-ink-2);
+  margin-bottom: 0.35rem;
+}
+.alert-danger {
+  background: var(--ts-red-soft);
+  border-color: rgba(225, 112, 85, 0.3);
+  color: #c0392b;
+  border-radius: var(--ts-radius);
+}
+.table {
+  color: var(--ts-ink);
+}
+.table th {
+  font-family: var(--ts-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ts-muted);
+  font-weight: 500;
+  border-color: var(--ts-border);
+}
+.table td {
+  border-color: var(--ts-border);
+  color: var(--ts-ink-2);
+  vertical-align: middle;
+  font-size: 0.9rem;
+}
+.table a {
+  color: var(--ts-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+.table a:hover {
+  color: var(--ts-purple);
+}
+.table-hover tbody tr:hover {
+  background: var(--ts-surface-2);
+}
+
+/* =========================================================================
+   App Shell
+   ========================================================================= */
+.ts-shell {
+  min-height: 100vh;
+  display: flex;
+}
+
+.ts-sidebar {
+  width: 230px;
+  flex-shrink: 0;
+  background: var(--ts-surface);
+  border-right: 1px solid var(--ts-border);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  box-shadow: var(--ts-shadow-sm);
+}
+.ts-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: var(--ts-ink);
+  font-weight: 800;
+  font-size: 1.05rem;
+  transition: color 0.25s ease;
+}
+
+.ts-brand:hover {
+  color: var(--ts-purple);
+}
+
+.ts-brand-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ts-logo {
+  width: 34px;
+  height: 34px;
+  display: block;
+  object-fit: contain;
+  transition: transform 0.25s ease;
+}
+
+.ts-brand:hover .ts-logo {
+  transform: rotate(-8deg) scale(1.08);
+}
+
+.ts-brand-text {
+  letter-spacing: -0.02em;
+}
+
+.ts-role-pill {
+  font-size: 0.72rem;
+  color: var(--ts-muted);
+  margin-bottom: 1.75rem;
+  font-weight: 500;
+}
+.ts-role-pill strong {
+  color: var(--ts-purple);
+}
+
+.ts-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.ts-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--ts-radius);
+  color: var(--ts-ink-2);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: all 0.12s;
+}
+.ts-nav-link:hover {
+  background: var(--ts-surface-2);
+  color: var(--ts-purple);
+}
+.ts-nav-link.active {
+  background: var(--ts-purple-soft);
+  color: var(--ts-purple);
+  font-weight: 600;
+}
+.ts-nav-link svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.ts-sidebar-footer {
+  border-top: 1px solid var(--ts-border);
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+.ts-logout-btn {
+  background: none;
+  border: 1px solid var(--ts-border);
+  color: var(--ts-muted);
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 50px;
+  font-family: var(--ts-font);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.ts-logout-btn:hover {
+  border-color: var(--ts-red);
+  color: var(--ts-red);
+}
+
+.ts-main {
+  flex: 1;
+  min-width: 0;
+  padding: 2rem 2.25rem 3rem;
+  background: var(--ts-bg);
+}
+
+.ts-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.ts-eyebrow {
+  font-family: var(--ts-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ts-muted);
+  margin-bottom: 0.2rem;
+}
+.ts-page-title {
+  font-size: 1.65rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.03em;
+}
+
+@media (max-width: 860px) {
+  .ts-shell {
+    flex-direction: column;
+  }
+  .ts-sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .ts-sidebar-footer {
+    display: none;
+  }
+  .ts-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .ts-main {
+    padding: 1.25rem;
+  }
+}
+
+/* =========================================================================
+   Status Badges
+   ========================================================================= */
+.ts-stub {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.65rem;
+  border-radius: 50px;
+  font-family: var(--ts-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.ts-stub::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.ts-stub--pending {
+  background: var(--ts-amber-soft);
+  color: #b7860b;
+}
+.ts-stub--assigned {
+  background: var(--ts-blue-soft);
+  color: #0984e3;
+}
+.ts-stub--progress {
+  background: var(--ts-violet-soft);
+  color: var(--ts-purple);
+}
+.ts-stub--completed {
+  background: var(--ts-green-soft);
+  color: #00897b;
+}
+.ts-stub--unknown {
+  background: var(--ts-border);
+  color: var(--ts-muted);
+}
+.ts-stub--high {
+  background: var(--ts-red-soft);
+  color: var(--ts-red);
+}
+.ts-stub--low {
+  background: var(--ts-green-soft);
+  color: var(--ts-green);
+}
+
+/* =========================================================================
+   Cards & Panels
+   ========================================================================= */
+.ts-panel {
+  background: var(--ts-surface);
+  border: 1px solid var(--ts-border);
+  border-radius: var(--ts-radius-lg);
+  box-shadow: var(--ts-shadow-sm);
+}
+.ts-card {
+  background: var(--ts-surface);
+  border: 1px solid var(--ts-border);
+  border-radius: var(--ts-radius);
+  padding: 1rem 1.1rem;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  box-shadow: var(--ts-shadow-sm);
+  transition: all 0.14s;
+}
+.ts-card:hover {
+  border-color: var(--ts-purple);
+  box-shadow: var(--ts-shadow);
+  transform: translateY(-2px);
+  color: inherit;
+}
+.ts-card-title {
+  font-weight: 700;
+  font-size: 0.92rem;
+  margin: 0.4rem 0 0.2rem;
+  letter-spacing: -0.01em;
+}
+.ts-card-meta {
+  font-family: var(--ts-mono);
+  font-size: 0.7rem;
+  color: var(--ts-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+/* =========================================================================
+   Kanban Board
+   ========================================================================= */
+.ts-board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(200px, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .ts-board {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .ts-board {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ts-column-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.1rem 0.65rem;
+  border-bottom: 2px solid var(--ts-border-dark);
+  margin-bottom: 0.75rem;
+}
+.ts-column-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ts-ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ts-column-count {
+  background: var(--ts-purple-soft);
+  color: var(--ts-purple);
+  font-family: var(--ts-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+  border-radius: 50px;
+  padding: 0.05rem 0.4rem;
+}
+.ts-column-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.ts-column-empty {
+  font-family: var(--ts-mono);
+  font-size: 0.72rem;
+  color: var(--ts-muted);
+  border: 1.5px dashed var(--ts-border);
+  border-radius: var(--ts-radius);
+  padding: 1rem;
+  text-align: center;
+}
+
+/* =========================================================================
+   Misc
+   ========================================================================= */
+.ts-divider {
+  border-top: 1px solid var(--ts-border);
+  margin: 1.5rem 0;
+}
+
+.ts-empty-state {
+  text-align: center;
+  padding: 3.5rem 1.5rem;
+  color: var(--ts-muted);
+}
+.ts-empty-state svg {
+  width: 44px;
+  height: 44px;
+  margin-bottom: 1rem;
+  opacity: 0.4;
+}
+.ts-empty-state h3 {
+  font-size: 1.05rem;
+  color: var(--ts-ink);
+  margin-bottom: 0.4rem;
+  font-weight: 700;
+}
+.ts-empty-state p {
+  font-size: 0.85rem;
+}
+
+.ts-banner {
+  border-radius: var(--ts-radius);
+  padding: 0.75rem 1rem;
+  font-size: 0.83rem;
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+}
+.ts-banner svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+.ts-banner-warn {
+  background: var(--ts-amber-soft);
+  border: 1px solid rgba(253, 203, 110, 0.5);
+  color: #8b6914;
+}
+.ts-banner-info {
+  background: var(--ts-purple-soft);
+  border: 1px solid rgba(108, 92, 231, 0.2);
+  color: var(--ts-purple-dark);
+}
+
+.ts-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--ts-border) 0%,
+    #ebe9ff 50%,
+    var(--ts-border) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--ts-radius);
+}
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.ts-worklog-entry {
+  border-left: 2px solid var(--ts-border-dark);
+  padding: 0 0 0 0.85rem;
+  margin-bottom: 1rem;
+  position: relative;
+}
+.ts-worklog-entry::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ts-purple);
+}
+.ts-worklog-entry.is-complete::before {
+  background: var(--ts-green);
+}
+.ts-worklog-meta {
+  font-family: var(--ts-mono);
+  font-size: 0.68rem;
+  color: var(--ts-muted);
+  margin-bottom: 0.2rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ts-skeleton {
+    animation: none;
+  }
+  .ts-card {
+    transition: none;
+  }
+}

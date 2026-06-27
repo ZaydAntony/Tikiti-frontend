@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Ticket Sasa</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+  <style>
+    body { background: var(--ts-bg); }
+    .auth-shell { min-height: 100vh; display: grid; grid-template-columns: 1fr 460px; }
+
+    /* Left ambient */
+    .auth-left {
+      background: linear-gradient(135deg, #6C5CE7 0%, #A29BFE 100%);
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: 3rem; position: relative; overflow: hidden;
+    }
+    .auth-left::after {
+      content:""; position:absolute; inset:0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+    .auth-brand { display:flex; align-items:center; gap:.65rem; color:#fff; text-decoration:none; font-weight:800; font-size:1.1rem; position:relative; }
+    .auth-brand-mark { width:32px; height:32px; background:rgba(255,255,255,.25); backdrop-filter:blur(4px); border-radius:9px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.8rem; color:#fff; }
+    .auth-hero { position:relative; }
+    .auth-pill { display:inline-block; background:rgba(255,255,255,.18); backdrop-filter:blur(4px); color:#fff; font-size:.72rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; padding:.35rem .85rem; border-radius:50px; margin-bottom:1.25rem; font-family:var(--ts-mono); }
+    .auth-headline { font-size:clamp(1.9rem,3.2vw,3rem); font-weight:800; color:#fff; line-height:1.1; letter-spacing:-.03em; margin-bottom:1rem; }
+    .auth-sub { color:rgba(255,255,255,.75); font-size:.92rem; line-height:1.7; max-width:380px; }
+    .auth-footer { color:rgba(255,255,255,.5); font-family:var(--ts-mono); font-size:.68rem; position:relative; }
+
+    /* Right panel */
+    .auth-right {
+      background: var(--ts-surface);
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 3rem 2.75rem;
+      border-left: 1px solid var(--ts-border);
+    }
+    .auth-right-title { font-size:1.6rem; font-weight:800; letter-spacing:-.03em; margin-bottom:.25rem; }
+    .auth-right-sub { color:var(--ts-muted); font-size:.88rem; margin-bottom:1.75rem; }
+
+    /* Mode toggle */
+    .mode-toggle { background:var(--ts-surface-2); border:1px solid var(--ts-border); border-radius:50px; padding:3px; display:flex; gap:3px; margin-bottom:1.75rem; }
+    .mode-btn { flex:1; border:none; background:none; padding:.5rem 1rem; border-radius:50px; font-family:var(--ts-font); font-size:.87rem; font-weight:600; color:var(--ts-muted); cursor:pointer; transition:all .15s; }
+    .mode-btn.active { background:var(--ts-purple); color:#fff; box-shadow:0 2px 8px var(--ts-purple-soft); }
+
+    /* Role tabs */
+    .role-tabs { display:flex; gap:.5rem; margin-bottom:1.5rem; }
+    .role-tab { flex:1; border:1.5px solid var(--ts-border); background:none; color:var(--ts-ink-2); font-family:var(--ts-font); font-size:.8rem; font-weight:600; border-radius:50px; padding:.45rem .5rem; cursor:pointer; transition:all .14s; }
+    .role-tab.active { border-color:var(--ts-purple); color:var(--ts-purple); background:var(--ts-purple-soft); }
+
+    .form-panel { display:none; }
+    .form-panel.active { display:block; }
+
+    .auth-link { text-align:center; font-size:.82rem; color:var(--ts-muted); margin-top:1.25rem; }
+    .auth-link button { background:none; border:none; color:var(--ts-purple); font-size:.82rem; cursor:pointer; font-weight:600; text-decoration:underline; text-underline-offset:3px; }
+
+    @media (max-width:860px) {
+      .auth-shell { grid-template-columns:1fr; }
+      .auth-left { display:none; }
+      .auth-right { padding:2.5rem 1.75rem; min-height:100vh; }
+    }
+  </style>
+</head>
+<body>
+<div class="auth-shell">
+  <!-- Left -->
+  <div class="auth-left">
+    <a class="ts-brand" href="#">
+      <span class="ts-brand-mark"><img src="./logo.png" alt="Ticket Sasa Logo" class="ts-logo"></img></span>
+      Ticket Sasa
+    </a>
+    <div class="auth-hero">
+      <span class="auth-pill">Helpdesk Platform</span>
+      <h1 class="auth-headline">Resolve every issue.<br>Zero tickets left behind.</h1>
+      <p class="auth-sub">Submit, track and action support tickets with AI triage and full worklog transparency — built for teams that care about closure.</p>
+    </div>
+    <div class="auth-footer">© Zayd.dev &nbsp;·&nbsp; </div>
+  </div>
+
+  <!-- Right -->
+  <div class="auth-right">
+    <h2 class="auth-right-title" id="auth-title">Welcome back</h2>
+    <p class="auth-right-sub" id="auth-sub">Sign in to your workspace.</p>
+
+    <!-- mode toggle -->
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="btn-signin">Sign in</button>
+      <button class="mode-btn" id="btn-signup">Sign up</button>
+    </div>
+
+    <!-- Sign in -->
+    <div class="form-panel active" id="panel-signin">
+      <div class="role-tabs">
+        <button class="role-tab active" data-role="U">User</button>
+        <button class="role-tab" data-role="T">Technician</button>
+        <button class="role-tab" data-role="A">Admin</button>
+      </div>
+      <div id="si-alert" class="alert alert-danger d-none py-2 small"></div>
+      <form id="si-form" novalidate>
+        <div class="mb-3">
+          <label class="form-label" for="si-user">Username</label>
+          <input class="form-control" id="si-user" type="text" autocomplete="username" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="si-pass">Password</label>
+          <input class="form-control" id="si-pass" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="btn btn-primary w-100 mt-1" type="submit" id="si-btn">Sign in</button>
+      </form>
+      <p class="auth-link">No account? <button id="to-signup">Create one</button></p>
+    </div>
+
+    <!-- Sign up -->
+    <div class="form-panel" id="panel-signup">
+      <div id="su-alert" class="alert alert-danger d-none py-2 small"></div>
+      <form id="su-form" novalidate>
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label" for="su-first">First name</label>
+            <input class="form-control" id="su-first" type="text" autocomplete="given-name">
+          </div>
+          <div class="col-6">
+            <label class="form-label" for="su-last">Last name</label>
+            <input class="form-control" id="su-last" type="text" autocomplete="family-name">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="su-user">Username</label>
+          <input class="form-control" id="su-user" type="text" autocomplete="username" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="su-email">Email</label>
+          <input class="form-control" id="su-email" type="email" autocomplete="email" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="su-role">Account type</label>
+          <select class="form-select" id="su-role">
+            <option value="U" selected>User — submit & track tickets</option>
+            <option value="T">Technician — work assigned tickets</option>
+            <option value="A">Admin — full access</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="su-pass">Password</label>
+          <input class="form-control" id="su-pass" type="password" autocomplete="new-password" required>
+        </div>
+        <button class="btn btn-primary w-100 mt-1" type="submit" id="su-btn">Create account</button>
+      </form>
+      <p class="auth-link">Already have an account? <button id="to-signin">Sign in</button></p>
+    </div>
+  </div>
+</div>
+<script src="js/config.js"></script>
+
+<script src="js/api.js"></script>
+<script>
+if (TicketSasaAPI.isLoggedIn()) location.href = 'tickets.html';
+
+const panels = { signin: document.getElementById('panel-signin'), signup: document.getElementById('panel-signup') };
+const btns   = { signin: document.getElementById('btn-signin'),   signup: document.getElementById('btn-signup') };
+const title  = document.getElementById('auth-title');
+const sub    = document.getElementById('auth-sub');
+
+function show(mode) {
+  Object.keys(panels).forEach(k => {
+    panels[k].classList.toggle('active', k === mode);
+    btns[k].classList.toggle('active', k === mode);
+  });
+  title.textContent = mode === 'signin' ? 'Welcome back' : 'Create account';
+  sub.textContent   = mode === 'signin' ? 'Sign in to your workspace.' : 'Get started — it\'s free.';
+}
+btns.signin.addEventListener('click', () => show('signin'));
+btns.signup.addEventListener('click', () => show('signup'));
+document.getElementById('to-signup').addEventListener('click', () => show('signup'));
+document.getElementById('to-signin').addEventListener('click', () => show('signin'));
+
+document.querySelectorAll('.role-tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.role-tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+}));
+
+// Sign in
+document.getElementById('si-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const alert = document.getElementById('si-alert');
+  const btn   = document.getElementById('si-btn');
+  alert.classList.add('d-none');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  try {
+    await TicketSasaAPI.login({ username: document.getElementById('si-user').value.trim(), password: document.getElementById('si-pass').value });
+    const next = new URLSearchParams(location.search).get('next');
+    location.href = next ? decodeURIComponent(next) : 'tickets.html';
+  } catch(err) {
+    alert.textContent = err.status===401 ? 'Incorrect username or password.' : (err.message||'Sign in failed.');
+    alert.classList.remove('d-none');
+    btn.disabled=false; btn.textContent='Sign in';
+  }
+});
+
+// Sign up
+document.getElementById('su-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const alert = document.getElementById('su-alert');
+  const btn   = document.getElementById('su-btn');
+  alert.classList.add('d-none');
+  btn.disabled=true; btn.textContent='Creating account…';
+  const p = {
+    first_name: document.getElementById('su-first').value.trim(),
+    last_name:  document.getElementById('su-last').value.trim(),
+    username:   document.getElementById('su-user').value.trim(),
+    email:      document.getElementById('su-email').value.trim(),
+    role:       document.getElementById('su-role').value,
+    password:   document.getElementById('su-pass').value,
+  };
+  try {
+    await TicketSasaAPI.register(p);
+    await TicketSasaAPI.login({ username: p.username, password: p.password });
+    location.href = 'tickets.html';
+  } catch(err) {
+    alert.textContent = err.message||'Could not create account.';
+    alert.classList.remove('d-none');
+    btn.disabled=false; btn.textContent='Create account';
+  }
+});
+</script>
+</body></html>

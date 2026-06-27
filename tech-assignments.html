@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>My Assignments · Ticket Sasa</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+<div id="ts-shell-root"></div>
+<script src="js/config.js"></script>
+
+<script src="js/api.js"></script><script src="js/auth.js"></script><script src="js/shell.js"></script>
+<script>
+const STATUS_MAP   = { P:'pending', A:'assigned', I:'progress', C:'completed' };
+const STATUS_LABEL = { P:'Pending', A:'Assigned', I:'In Progress', C:'Completed' };
+const CAT_LABEL    = { B:'Billing', C:'Complaint', T:'Technical', N:'Connectivity' };
+const PRI_MAP      = { H:'high', L:'low' };
+const PRI_LABEL    = { H:'High', L:'Low' };
+
+(async () => {
+  const user = await TicketSasaAuth.requireAuth(); if (!user) return;
+  if (TicketSasaAuth.getEffectiveRole(user) !== 'T') { location.href = 'tickets.html'; return; }
+  const esc     = TicketSasaShell.escapeHtml;
+  const content = TicketSasaShell.render(user, { activeHref: 'tech-assignments.html' });
+
+  content.innerHTML = `
+    <div class="ts-topbar">
+      <div><div class="ts-eyebrow">Technician workspace</div><h1 class="ts-page-title">My Assignments</h1></div>
+    </div>
+    <div id="region"><div class="ts-skeleton" style="height:300px;border-radius:14px"></div></div>`;
+
+  try {
+    // Technicians see only their own assignments via get_queryset
+    const data        = await TicketSasaAPI.listAssignments();
+    const assignments = Array.isArray(data) ? data : (data.results || []);
+
+    if (!assignments.length) {
+      document.getElementById('region').innerHTML = `<div class="ts-empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 9a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V9Z"/></svg>
+        <h3>No assignments yet</h3>
+        <p>An admin will assign tickets to you. Check back soon.</p>
+      </div>`; return;
+    }
+
+    // Fetch full ticket details for each assignment
+    const ticketDetails = await Promise.all(
+      assignments.map(a => TicketSasaAPI.getTicket(a.ticket).catch(() => null))
+    );
+
+    const accordionItems = assignments.map((a, i) => {
+      const t = ticketDetails[i];
+      if (!t) return '';
+      const stub = `<span class="ts-stub ts-stub--${STATUS_MAP[t.status] || 'unknown'}">${STATUS_LABEL[t.status] || '—'}</span>`;
+      return `
+        <div class="ts-panel mb-2">
+          <!-- Header -->
+          <button class="w-100 text-start p-4 border-0 bg-transparent d-flex justify-content-between align-items-center"
+            type="button" data-bs-toggle="collapse" data-bs-target="#ticket-${t.id}" aria-expanded="false">
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                ${stub}
+                <span style="font-family:var(--ts-mono);font-size:.7rem;color:var(--ts-muted)">#${t.id}</span>
+              </div>
+              <strong style="font-size:.97rem;letter-spacing:-.01em">${esc(t.title)}</strong>
+              <div class="small text-muted mt-1">${esc(t.location || '—')}</div>
+            </div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;color:var(--ts-muted)"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+
+          <!-- Expandable body -->
+          <div id="ticket-${t.id}" class="collapse" data-ticket-id="${t.id}">
+            <div class="px-4 pb-4">
+              ${t.description ? `<p class="small mb-3" style="line-height:1.7;color:var(--ts-ink-2)">${esc(t.description)}</p>` : ''}
+
+              <div class="row g-3">
+                <div class="col-md-7">
+                  <h3 class="h6 mb-2" style="font-weight:700">Worklogs</h3>
+                  <div id="wl-${t.id}" class="mb-3"><div class="ts-skeleton" style="height:50px"></div></div>
+                  <form id="wl-form-${t.id}" data-tid="${t.id}">
+                    <div class="mb-2">
+                      <textarea class="form-control form-control-sm" id="wl-notes-${t.id}" rows="2" required
+                        placeholder="What did you do on this ticket?"></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="wl-done-${t.id}" style="accent-color:var(--ts-purple)">
+                        <label class="form-check-label small text-muted" for="wl-done-${t.id}">Mark as resolved</label>
+                      </div>
+                      <button class="btn btn-primary btn-sm" type="submit">Add entry</button>
+                    </div>
+                    <div id="wl-err-${t.id}" class="alert alert-danger d-none small py-1 mt-2"></div>
+                  </form>
+                </div>
+                <div class="col-md-5">
+                  <h3 class="h6 mb-2" style="font-weight:700">AI Summary</h3>
+                  <div id="ai-${t.id}"><div class="ts-skeleton" style="height:70px"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('region').innerHTML = `<div>${accordionItems}</div>`;
+
+    // Wire up each accordion panel
+    assignments.forEach((a, i) => {
+      const t = ticketDetails[i]; if (!t) return;
+      const panel = document.getElementById(`ticket-${t.id}`);
+
+      // Load data when panel first opens
+      let loaded = false;
+      panel.addEventListener('show.bs.collapse', () => {
+        if (loaded) return; loaded = true;
+        loadWorklogs(t.id);
+        loadAI(t.id);
+      });
+
+      // Worklog form
+      document.getElementById(`wl-form-${t.id}`)?.addEventListener('submit', async e => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type=submit]');
+        const al  = document.getElementById(`wl-err-${t.id}`);
+        al.classList.add('d-none'); btn.disabled = true; btn.textContent = 'Adding…';
+        try {
+          await TicketSasaAPI.addWorklog(t.id, {
+            notes: document.getElementById(`wl-notes-${t.id}`).value.trim(),
+            is_completed_worklog: document.getElementById(`wl-done-${t.id}`).checked,
+          });
+          document.getElementById(`wl-notes-${t.id}`).value = '';
+          document.getElementById(`wl-done-${t.id}`).checked = false;
+          await loadWorklogs(t.id);
+        } catch(err) { al.textContent = err.message; al.classList.remove('d-none'); }
+        finally { btn.disabled = false; btn.textContent = 'Add entry'; }
+      });
+    });
+
+  } catch(err) {
+    document.getElementById('region').innerHTML = `<div class="alert alert-danger">${esc(err.message)}</div>`;
+  }
+
+  async function loadWorklogs(tid) {
+    const el = document.getElementById(`wl-${tid}`);
+    try {
+      const data = await TicketSasaAPI.listWorklogs(tid);
+      const logs = Array.isArray(data) ? data : (data.results || []);
+      if (!logs.length) { el.innerHTML = `<p class="small text-muted mb-2">No entries yet.</p>`; return; }
+      el.innerHTML = logs.map(l => `
+        <div class="ts-worklog-entry ${l.is_completed_worklog ? 'is-complete' : ''}">
+          <div class="ts-worklog-meta">${esc(l.user || '—')}${l.is_completed_worklog ? ' · resolved' : ''}</div>
+          <div style="font-size:.85rem;line-height:1.6">${esc(l.notes)}</div>
+        </div>`).join('');
+    } catch { el.innerHTML = `<p class="small text-muted mb-2">Could not load worklogs.</p>`; }
+  }
+
+  async function loadAI(tid) {
+    const el = document.getElementById(`ai-${tid}`);
+    try {
+      const s = await TicketSasaAPI.getAiSummary(tid);
+      if (!s) { el.innerHTML = `<p class="small text-muted">No AI summary yet.</p>`; return; }
+      const priLabel = PRI_LABEL[s.priority] || s.priority || '—';
+      const catLabel = CAT_LABEL[s.category] || s.category || '—';
+      const priCls   = PRI_MAP[s.priority]   || 'unknown';
+      el.innerHTML = `
+        <div class="d-flex gap-2 flex-wrap mb-2">
+          <span class="ts-stub ts-stub--${priCls}">${esc(priLabel)} priority</span>
+          <span class="ts-stub ts-stub--assigned">${esc(catLabel)}</span>
+        </div>
+        <p class="small mb-1" style="line-height:1.6">${esc(s.summarry || '')}</p>
+        <p class="small mb-0 text-muted"><strong class="text-dark">Suggestion:</strong> ${esc(s.suggestion || '')}</p>`;
+    } catch { el.innerHTML = `<p class="small text-muted">AI summary unavailable.</p>`; }
+  }
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body></html>
